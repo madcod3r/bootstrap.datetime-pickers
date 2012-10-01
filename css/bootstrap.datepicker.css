@@ -1,0 +1,49 @@
+.datepicker-select-month {
+    float: left;
+}
+
+.datepicker-select-year {
+    float: right;
+}
+
+.datepicker-month-year-title {
+    font-weight: bold;
+    margin: 0 3px;
+}
+
+a.datepicker-select-btn {
+    padding: 1px 3px 2px 3px;
+}
+
+a.datepicker-select-btn:hover {
+    background: #08C;
+    -webkit-border-radius: 3px;
+    -moz-border-radius: 3px;
+    border-radius: 3px;
+}
+
+/** calendar **/
+.datepicker-wrap .popover-content {
+    padding: 0;
+}
+
+
+table.datepicker-calendar {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+}
+
+table.datepicker-calendar thead td {
+    font-weight: bold;
+    background: #eaeaea;
+}
+
+table.datepicker-calendar td {
+    text-align: center;
+    padding: 3px 0;
+}
+
+table.datepicker-calendar td.prev-month-date, table.datepicker-calendar td.next-month-date {
+    color: #ccc;
+}
