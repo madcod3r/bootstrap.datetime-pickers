@@ -19,13 +19,13 @@
                 '<h3 class="popover-title">' +
                     '<div class="datepicker-select-month">' +
                         '<a class="datepicker-select-btn prev-month-btn" href="#"><span class="icon-chevron-left"></span></a>' +
-                        '<span class="datepicker-month-year-title">September</span>' +
+                        '<span class="datepicker-month-year-title datepicker-month">September</span>' +
                         '<a class="datepicker-select-btn next-month-btn" href="#"><span class="icon-chevron-right"></span></a>' +
                     '</div>' +
 
                     '<div class="datepicker-select-year">' +
                         '<a class="datepicker-select-btn prev-year-btn" href="#"><span class="icon-chevron-left"></span></a>' +
-                        '<span class="datepicker-month-year-title">2012</span>' +
+                        '<span class="datepicker-month-year-title datepicker-year">2011</span>' +
                         '<a class="datepicker-select-btn next-year-btn" href="#"><span class="icon-chevron-right"></span></a>' +
                     '</div>' +
                     '<div class="clearfix"></div>' +
@@ -34,13 +34,13 @@
                     '<table class="datepicker-calendar">' +
                         '<thead>' +
                         '<tr>' +
-                            '<td>Вс</td>' +
-                            '<td>Пн</td>' +
-                            '<td>Вт</td>' +
-                            '<td>Ср</td>' +
-                            '<td>Чт</td>' +
-                            '<td>Пт</td>' +
-                            '<td>Сб</td>' +
+                            '<td>Su</td>' +
+                            '<td>Mo</td>' +
+                            '<td>Tu</td>' +
+                            '<td>We</td>' +
+                            '<td>Th</td>' +
+                            '<td>Fr</td>' +
+                            '<td>Sa</td>' +
                         '</tr>' +
                         '</thead>' +
                         '<tbody>' +
@@ -49,44 +49,44 @@
                             '<td class="prev-month-date">29</td>' +
                             '<td class="prev-month-date">30</td>' +
                             '<td class="prev-month-date">31</td>' +
-                            '<td>1</td>' +
-                            '<td>2</td>' +
-                            '<td>3</td>' +
+                            '<td class="select-date">1</td>' +
+                            '<td class="select-date">2</td>' +
+                            '<td class="select-date">3</td>' +
                         '</tr>' +
                         '<tr>' +
-                            '<td>4</td>' +
-                            '<td>5</td>' +
-                            '<td>6</td>' +
-                            '<td>7</td>' +
-                            '<td>8</td>' +
-                            '<td>9</td>' +
-                            '<td>10</td>' +
+                            '<td class="select-date">4</td>' +
+                            '<td class="select-date">5</td>' +
+                            '<td class="select-date">6</td>' +
+                            '<td class="select-date">7</td>' +
+                            '<td class="select-date">8</td>' +
+                            '<td class="select-date">9</td>' +
+                            '<td class="select-date">10</td>' +
                         '</tr>' +
                         '<tr>' +
-                            '<td>11</td>' +
-                            '<td>12</td>' +
-                            '<td>13</td>' +
-                            '<td>14</td>' +
-                            '<td>15</td>' +
-                            '<td>16</td>' +
-                            '<td>17</td>' +
+                            '<td class="select-date">11</td>' +
+                            '<td class="select-date">12</td>' +
+                            '<td class="select-date">13</td>' +
+                            '<td class="select-date">14</td>' +
+                            '<td class="select-date">15</td>' +
+                            '<td class="select-date">16</td>' +
+                            '<td class="select-date">17</td>' +
                         '</tr>' +
                         '<tr>' +
-                            '<td>18</td>' +
-                            '<td>19</td>' +
-                            '<td>20</td>' +
-                            '<td>21</td>' +
-                            '<td>22</td>' +
-                            '<td>23</td>' +
-                            '<td>24</td>' +
+                            '<td class="select-date">18</td>' +
+                            '<td class="select-date">19</td>' +
+                            '<td class="select-date">20</td>' +
+                            '<td class="select-date">21</td>' +
+                            '<td class="select-date">22</td>' +
+                            '<td class="select-date">23</td>' +
+                            '<td class="select-date">24</td>' +
                         '</tr>' +
                         '<tr>' +
-                            '<td>25</td>' +
-                            '<td>26</td>' +
-                            '<td>27</td>' +
-                            '<td>28</td>' +
-                            '<td>29</td>' +
-                            '<td>30</td>' +
+                            '<td class="select-date">25</td>' +
+                            '<td class="select-date">26</td>' +
+                            '<td class="select-date">27</td>' +
+                            '<td class="select-date">28</td>' +
+                            '<td class="select-date">29</td>' +
+                            '<td class="select-date">30</td>' +
                             '<td class="next-month-date">1</td>' +
                         '</tr>' +
                         '</tbody>' +
@@ -104,36 +104,180 @@
                 return false;
             });
 
-            $('.prev-month-btn', $datepickerObj).click(function() {
-                console.log('previous month');
-            });
+            var date = new Date();
 
-            $('.next-month-btn', $datepickerObj).click(function() {
-                console.log('next month');
-            });
+            var $month = $('.datepicker-month', $datepickerObj);
+            var $year = $('.datepicker-year', $datepickerObj);
 
-            $('.prev-year-btn', $datepickerObj).click(function() {
-                console.log('previous year');
-            });
+            var days = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
+            var months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 
-            $('.next-year-btn', $datepickerObj).click(function() {
-                console.log('next year');
-            });
+            // set current month
+            var currMonth = date.getMonth();
 
-            $('table.datepicker-calendar tbody td', $datepickerObj).click(function() {
-                if ($(this).hasClass('next-month-date'))
+            // set current year
+            var currYear = date.getFullYear();
+
+
+            var month = currMonth;
+            var year = currYear;
+
+
+            var setDays = function()
+            {
+                var dayCount = (new Date(year, month + 1, 0)).getDate();
+                var firstDayOfWeek = (new Date(year, month, 1)).getDay();
+
+                var dateTbody = '<tr>';
+
+                var generalCount = 0;
+
+                // if first number of month not sunday - then add few number before
+                if (firstDayOfWeek !== 0)
                 {
-                    console.log('next month');
+                    var qMonth = month - 1;
+                    var qYear = year;
+
+                    if (month == 0)
+                    {
+                        var qMonth = 11;
+                        var qMonth = year - 1;
+                    }
+
+                    var lastNumberPrevMonth = (new Date(qYear.toString().slice(2), qMonth, 0)).getDate();
+                    for (var b = 1; b <= firstDayOfWeek; b++)
+                    {
+                        dateTbody += '<td class="prev-month-date">' + lastNumberPrevMonth + '</td>';
+                        lastNumberPrevMonth--;
+                        generalCount++;
+                    }
                 }
-                else if ($(this).hasClass('prev-month-date'))
+
+                for (var i = 1; i <= dayCount; i++)
                 {
-                    console.log('previous month');
+                    dateTbody += '<td class="select-date">' + i + '</td>';
+
+
+                    if (firstDayOfWeek == 6)
+                    {
+                        firstDayOfWeek = 0;
+
+                        dateTbody += '</tr>';
+
+                        if (i != dayCount)
+                        {
+                            dateTbody += '<tr>';
+                        }
+                    }
+                    else
+                    {
+                        firstDayOfWeek++;
+                    }
+                    generalCount++;
+                }
+
+                firstDayOfWeek--;
+
+                if (firstDayOfWeek !== 6)
+                {
+                    var lastDayOfWeek = 6 - firstDayOfWeek;
+
+                    for (var j = 1; j <= lastDayOfWeek; j++)
+                    {
+                        dateTbody += '<td class="next-month-date">' + j + '</td>';
+                        generalCount++;
+                    }
+
+                    dateTbody += '</tr>';
+                }
+
+                if (generalCount <= 35)
+                {
+                    for (var m = 1; m <= 7; m++, j++)
+                    {
+                        dateTbody += '<td class="next-month-date">' + j + '</td>';
+                        generalCount++;
+                    }
+                }
+
+                $('table.datepicker-calendar tbody', $datepickerObj).html(dateTbody);
+            }
+
+            setDays();
+
+            var setMonth = function (newMonth)
+            {
+                month = newMonth;
+                $month.html(months[month]);
+                setDays();
+            }
+
+            var setYear = function (newYear)
+            {
+                year = newYear;
+                $year.html(year);
+                setDays();
+            }
+
+
+            setMonth(currMonth);
+            setYear(currYear);
+
+            function prevMonth()
+            {
+                var newMonth = 11;
+                if (month == 0)
+                {
+                    setYear(year - 1);
                 }
                 else
                 {
-                    console.log('select a date');
+                    newMonth = month - 1;
                 }
+
+                setMonth(newMonth);
+            }
+
+            function nextMonth()
+            {
+                var newMonth = 0;
+                if (month == 11)
+                {
+                    setYear(year + 1);
+                }
+                else
+                {
+                    newMonth = month + 1;
+                }
+
+                setMonth(newMonth);
+            }
+
+            $('.prev-month-btn', $datepickerObj).click(prevMonth);
+            $('.next-month-btn', $datepickerObj).click(nextMonth);
+
+            $('.prev-year-btn', $datepickerObj).click(function() {
+                setYear(year - 1);
             });
+
+            $('.next-year-btn', $datepickerObj).click(function() {
+                setYear(year + 1);
+            });
+
+            $('table.datepicker-calendar tbody', $datepickerObj).on({
+                click: nextMonth
+            }, '.next-month-date');
+
+            $('table.datepicker-calendar tbody', $datepickerObj).on({
+                click: prevMonth
+            }, '.prev-month-date');
+
+            $('table.datepicker-calendar tbody', $datepickerObj).on({
+                click: function() {
+                    $this.val($(this).html() + '.' + month + '.' + year);
+                    $this.blur();
+                }
+            }, '.select-date');
         });
 
         // returning self

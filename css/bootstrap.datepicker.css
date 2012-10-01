@@ -1,18 +1,36 @@
+.datepicker-wrap .popover-title {
+    padding: 5px;
+}
+
 .datepicker-select-month {
     float: left;
+    overflow: hidden;
 }
 
 .datepicker-select-year {
     float: right;
+    overflow: hidden;
 }
 
 .datepicker-month-year-title {
     font-weight: bold;
     margin: 0 3px;
+    margin-top: 1px;
+    float: left;
+    text-align: center;
+}
+
+.datepicker-month {
+    width: 78px;
+}
+
+.datepicker-year {
+    width: 32px;
 }
 
 a.datepicker-select-btn {
     padding: 1px 3px 2px 3px;
+    float: left;
 }
 
 a.datepicker-select-btn:hover {
@@ -24,7 +42,7 @@ a.datepicker-select-btn:hover {
 
 /** calendar **/
 .datepicker-wrap .popover-content {
-    padding: 0;
+    padding: 5px;
 }
 
 
@@ -36,12 +54,25 @@ table.datepicker-calendar {
 
 table.datepicker-calendar thead td {
     font-weight: bold;
-    background: #eaeaea;
 }
 
 table.datepicker-calendar td {
     text-align: center;
     padding: 3px 0;
+}
+
+table.datepicker-calendar tbody td:hover {
+    background: #08C;
+    -webkit-border-radius: 3px;
+    -moz-border-radius: 3px;
+    border-radius: 3px;
+    color: #fff;
+    cursor: pointer;
+}
+
+table.datepicker-calendar tbody td.next-month-date:hover, table.datepicker-calendar tbody td.prev-month-date:hover {
+    background: #eaeaea;
+    color: #ccc;
 }
 
 table.datepicker-calendar td.prev-month-date, table.datepicker-calendar td.next-month-date {
