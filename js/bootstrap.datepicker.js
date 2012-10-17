@@ -12,6 +12,10 @@
 
             var $this = $(this);
 
+            $this.parent('.input-append').on({
+                click: function() { $this.focus() }
+            }, '.add-on');
+
             var offset = $this.offset();
 
             var $datepickerObj = $('<div class="datepicker-wrap popover bottom" style="top: ' + (offset.top + $this.height() + 10) + 'px; left: ' + offset.left + 'px">').html(
@@ -274,7 +278,7 @@
 
             $('table.datepicker-calendar tbody', $datepickerObj).on({
                 click: function() {
-                    $this.val($(this).html() + '.' + month + '.' + year);
+                    $this.val($(this).html() + '.' + (month + 1) + '.' + year);
                     $this.blur();
                 }
             }, '.select-date');
