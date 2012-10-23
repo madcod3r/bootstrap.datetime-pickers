@@ -1,16 +1,132 @@
 (function( $ ) {
 
+    // DPGlobal object
+    var DPGlobal = {
+        modes: [
+            {
+                clsName: 'days',
+                navFnc: 'Month',
+                navStep: 1
+            },
+            {
+                clsName: 'months',
+                navFnc: 'FullYear',
+                navStep: 1
+            },
+            {
+                clsName: 'years',
+                navFnc: 'FullYear',
+                navStep: 10
+            }],
+        dates:{
+            days: ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
+            daysShort: ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+            daysMin: ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"],
+            months: ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"],
+            monthsShort: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+        },
+        isLeapYear: function (year) {
+            return (((year % 4 === 0) && (year % 100 !== 0)) || (year % 400 === 0))
+        },
+        getDaysInMonth: function (year, month) {
+            return [31, (DPGlobal.isLeapYear(year) ? 29 : 28), 31, 30, 31, 30, 31, 31, 30, 31, 30, 31][month]
+        },
+        parseFormat: function(format){
+            var separator = format.match(/[.\/-].*?/),
+                parts = format.split(/\W+/);
+            if (!separator || !parts || parts.length == 0){
+                throw new Error("Invalid date format.");
+            }
+            return {separator: separator, parts: parts};
+        },
+        parseDate: function(date, format) {
+            var parts = date.split(format.separator),
+                date = new Date(1970, 1, 1, 0, 0, 0),
+                val;
+            if (parts.length == format.parts.length) {
+                for (var i=0, cnt = format.parts.length; i < cnt; i++) {
+                    val = parseInt(parts[i], 10)||1;
+                    switch(format.parts[i]) {
+                        case 'dd':
+                        case 'd':
+                            date.setDate(val);
+                            break;
+                        case 'mm':
+                        case 'm':
+                            date.setMonth(val - 1);
+                            break;
+                        case 'yy':
+                            date.setFullYear(2000 + val);
+                            break;
+                        case 'yyyy':
+                            date.setFullYear(val);
+                            break;
+                    }
+                }
+            }
+            return date;
+        },
+        formatDate: function(date, format){
+            var val = {
+                d: date.getDate(),
+                m: date.getMonth() + 1,
+                yy: date.getFullYear().toString().substring(2),
+                yyyy: date.getFullYear()
+            };
+            val.dd = (val.d < 10 ? '0' : '') + val.d;
+            val.mm = (val.m < 10 ? '0' : '') + val.m;
+            var date = [];
+            for (var i=0, cnt = format.parts.length; i < cnt; i++) {
+                date.push(val[format.parts[i]]);
+            }
+            return date.join(format.separator);
+        },
+        headTemplate: '<thead>'+
+            '<tr>'+
+            '<th class="prev"><i class="icon-arrow-left"/></th>'+
+            '<th colspan="2" class="switch month"></th>'+
+            '<th class="next"><i class="icon-arrow-right"/></th>'+
+            '<th class="prev"><i class="icon-arrow-left"/></th>'+
+            '<th colspan="2" class="switch year"></th>'+
+            '<th class="next"><i class="icon-arrow-right"/></th>'+
+            '</tr>'+
+            '</thead>',
+        contTemplate: '<tbody><tr><td colspan="7"></td></tr></tbody>'
+    };
+
     // start plugin
     $.fn.datepicker = function( options ) {
+
+
 
         // merging settings
         var settings = $.extend({
             'format': 'dd-mm-yyyy'
         }, options);
 
+
+
+        var formatDate = function(date, format){
+            var val = {
+                d: date.getDate(),
+                m: date.getMonth() + 1,
+                yy: date.getFullYear().toString().substring(2),
+                yyyy: date.getFullYear()
+            };
+            val.dd = (val.d < 10 ? '0' : '') + val.d;
+            val.mm = (val.m < 10 ? '0' : '') + val.m;
+            var date = [];
+            for (var i=0, cnt = format.parts.length; i < cnt; i++) {
+                date.push(val[format.parts[i]]);
+            }
+            return date.join(format.separator);
+        };
+
         return this.each(function() {
 
             var $this = $(this);
+
+            var format = DPGlobal.parseFormat(settings.format||this.element.data('date-format')||'mm/dd/yyyy');
 
             $this.parent('.input-append').on({
                 click: function() { $this.focus() }
@@ -278,7 +394,8 @@
 
             $('table.datepicker-calendar tbody', $datepickerObj).on({
                 click: function() {
-                    $this.val($(this).html() + '.' + (month + 1) + '.' + year);
+                    var date = $(this).html();
+                    $this.val(formatDate(new Date(year, month, date, 0, 0, 0, 0), format));
                     $this.blur();
                 }
             }, '.select-date');
