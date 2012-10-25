@@ -1,3 +1,4 @@
+// TODO: keep selected dates after switch month ot year in calendar
 (function( $ ) {
 
     // DPGlobal object
@@ -101,7 +102,8 @@
 
         // merging settings
         var settings = $.extend({
-            'format': 'dd-mm-yyyy'
+            format: 'mm/dd/yyyy',
+            multidate: false
         }, options);
 
 
@@ -242,6 +244,8 @@
             var month = currMonth;
             var year = currYear;
 
+            var selectedDays = [];
+
 
             var setDays = function()
             {
@@ -255,27 +259,50 @@
                 // if first number of month not sunday - then add few number before
                 if (firstDayOfWeek !== 0)
                 {
-                    var qMonth = month - 1;
+                    var qMonth = month;
                     var qYear = year;
 
                     if (month == 0)
                     {
                         var qMonth = 11;
-                        var qMonth = year - 1;
+                        var qYear = year - 1;
                     }
 
-                    var lastNumberPrevMonth = (new Date(qYear.toString().slice(2), qMonth, 0)).getDate();
-                    for (var b = 1; b <= firstDayOfWeek; b++)
+                    var prevMonthDate = new Date(qYear, qMonth, 0);
+
+                    var lastNumberPrevMonth = prevMonthDate.getDate();
+                    for (var b = (lastNumberPrevMonth - firstDayOfWeek + 1); b <= lastNumberPrevMonth; b++)
                     {
-                        dateTbody += '<td class="prev-month-date">' + lastNumberPrevMonth + '</td>';
-                        lastNumberPrevMonth--;
+                        var classes = ['prev-month-date'];
+                        var thisDate = new Date(qYear, qMonth -1, b);
+
+                        // if this date is selected - add class "selected"
+                        selectedDays.forEach(function(selectedDate) {
+                            if (selectedDate.getTime() == thisDate.getTime())
+                            {
+                                classes.push('selected');
+                            }
+                        });
+
+                        dateTbody += '<td class="' + classes.join(' ') + '">' + b + '</td>';
                         generalCount++;
                     }
                 }
 
                 for (var i = 1; i <= dayCount; i++)
                 {
-                    dateTbody += '<td class="select-date">' + i + '</td>';
+                    var classes = ['select-date'];
+                    var thisDate = new Date(year, month, i, 0, 0, 0);
+
+                    // if this date is selected - add class "selected"
+                    selectedDays.forEach(function(selectedDate) {
+                        if (selectedDate.getTime() == thisDate.getTime())
+                        {
+                            classes.push('selected');
+                        }
+                    });
+
+                    dateTbody += '<td class="' + classes.join(' ') + '">' + i + '</td>';
 
 
                     if (firstDayOfWeek == 6)
@@ -302,9 +329,29 @@
                 {
                     var lastDayOfWeek = 6 - firstDayOfWeek;
 
+                    var nextMonth = month + 1;
+                    var nextYear = year;
+
+                    if (month == 11)
+                    {
+                        var nextMonth = 0;
+                        var nextYear = year + 1;
+                    }
+
                     for (var j = 1; j <= lastDayOfWeek; j++)
                     {
-                        dateTbody += '<td class="next-month-date">' + j + '</td>';
+                        var classes = ['next-month-date'];
+                        var thisDate = new Date(nextYear, nextMonth, j);
+
+                        // if this date is selected - add class "selected"
+                        selectedDays.forEach(function(selectedDate) {
+                            if (selectedDate.getTime() == thisDate.getTime())
+                            {
+                                classes.push('selected');
+                            }
+                        });
+
+                        dateTbody += '<td class="' + classes.join(' ') + '">' + j + '</td>';
                         generalCount++;
                     }
 
@@ -313,9 +360,29 @@
 
                 if (generalCount <= 35)
                 {
+                    var nextMonth = month + 1;
+                    var nextYear = year;
+
+                    if (month == 11)
+                    {
+                        var nextMonth = 0;
+                        var nextYear = year + 1;
+                    }
+
                     for (var m = 1; m <= 7; m++, j++)
                     {
-                        dateTbody += '<td class="next-month-date">' + j + '</td>';
+                        var classes = ['next-month-date'];
+                        var thisDate = new Date(nextYear, nextMonth, j);
+
+                        // if this date is selected - add class "selected"
+                        selectedDays.forEach(function(selectedDate) {
+                            if (selectedDate.getTime() == thisDate.getTime())
+                            {
+                                classes.push('selected');
+                            }
+                        });
+
+                        dateTbody += '<td class="' + classes.join(' ') + '">' + j + '</td>';
                         generalCount++;
                     }
                 }
@@ -329,14 +396,13 @@
             {
                 month = newMonth;
                 $month.html(months[month]);
-                setDays();
+
             }
 
             var setYear = function (newYear)
             {
                 year = newYear;
                 $year.html(year);
-                setDays();
             }
 
 
@@ -356,6 +422,7 @@
                 }
 
                 setMonth(newMonth);
+                setDays();
             }
 
             function nextMonth()
@@ -371,6 +438,7 @@
                 }
 
                 setMonth(newMonth);
+                setDays();
             }
 
             $('.prev-month-btn', $datepickerObj).click(prevMonth);
@@ -378,10 +446,12 @@
 
             $('.prev-year-btn', $datepickerObj).click(function() {
                 setYear(year - 1);
+                setDays();
             });
 
             $('.next-year-btn', $datepickerObj).click(function() {
                 setYear(year + 1);
+                setDays();
             });
 
             $('table.datepicker-calendar tbody', $datepickerObj).on({
@@ -393,10 +463,65 @@
             }, '.prev-month-date');
 
             $('table.datepicker-calendar tbody', $datepickerObj).on({
-                click: function() {
-                    var date = $(this).html();
-                    $this.val(formatDate(new Date(year, month, date, 0, 0, 0, 0), format));
-                    $this.blur();
+                click: function(e) {
+
+
+                    var day = $(this).html();
+                    var date = new Date(year, month, day, 0, 0, 0, 0);
+
+                    if (settings.multidate && e.ctrlKey)
+                    {
+                        // if already exist some date in input
+                        if ($this.val())
+                        {
+                            // if clicked date already selcted
+                            if ($(this).hasClass('selected'))
+                            {
+                                // remove selection
+                                $(this).removeClass('selected');
+
+                                // remove selected date
+                                selectedDays.forEach(function (oneDate, i) {
+                                    if (oneDate.getTime() == date.getTime())
+                                    {
+                                        delete selectedDays[i];
+                                    }
+                                });
+                            }
+                            else
+                            {
+                                // added selected date
+                                selectedDays.push(date);
+                                $(this).addClass('selected');
+                            }
+                        }
+                        else
+                        {
+                            // added selected date
+                            selectedDays.push(date);
+                            $(this).addClass('selected');
+                        }
+
+                    }
+                    else
+                    {
+                        // remove all selected days
+                        $('table.datepicker-calendar tbody td').removeClass('selected');
+                        selectedDays = [];
+
+                        // added selected date
+                        selectedDays.push(date);
+                        $(this).addClass('selected');
+
+                        // unfocus
+                        $this.blur();
+                    }
+                    // put all selected dates in input
+                    var formattedDates = [];
+                    selectedDays.forEach(function(selectedDate) {
+                        formattedDates.push(formatDate(selectedDate, format));
+                    });
+                    $this.val(formattedDates.join(','));
                 }
             }, '.select-date');
         });

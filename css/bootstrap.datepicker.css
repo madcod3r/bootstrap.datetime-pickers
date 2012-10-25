@@ -52,8 +52,9 @@ a.datepicker-select-btn:hover {
 
 table.datepicker-calendar {
     width: 100%;
-    border-collapse: collapse;
     table-layout: fixed;
+    border-collapse: separate;
+    border-spacing: 2px;
 }
 
 table.datepicker-calendar thead td {
@@ -63,6 +64,7 @@ table.datepicker-calendar thead td {
 table.datepicker-calendar td {
     text-align: center;
     padding: 3px 0;
+    margin: 1px;
 }
 
 table.datepicker-calendar tbody td:hover {
@@ -71,7 +73,18 @@ table.datepicker-calendar tbody td:hover {
     -moz-border-radius: 3px;
     border-radius: 3px;
     color: #fff;
+    text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.25);
     cursor: pointer;
+}
+
+table.datepicker-calendar tbody td.selected
+{
+    background: #888;
+    text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.25);
+    -webkit-border-radius: 3px;
+    -moz-border-radius: 3px;
+    border-radius: 3px;
+    color: #fff;
 }
 
 table.datepicker-calendar tbody td.next-month-date:hover, table.datepicker-calendar tbody td.prev-month-date:hover {
@@ -82,3 +95,9 @@ table.datepicker-calendar tbody td.next-month-date:hover, table.datepicker-calen
 table.datepicker-calendar td.prev-month-date, table.datepicker-calendar td.next-month-date {
     color: #ccc;
 }
+
+table.datepicker-calendar tbody td.prev-month-date.selected, table.datepicker-calendar tbody td.next-month-date.selected
+{
+    background: #B5B5B5;
+}
+
