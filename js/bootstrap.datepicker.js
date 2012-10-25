@@ -1,53 +1,41 @@
-// TODO: keep selected dates after switch month ot year in calendar
-(function( $ ) {
+(function ($) {
+    "use strict";
 
     // DPGlobal object
     var DPGlobal = {
-        modes: [
-            {
-                clsName: 'days',
-                navFnc: 'Month',
-                navStep: 1
+            dates: {
+                days: ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
+                daysShort: ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+                daysMin: ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"],
+                months: ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"],
+                monthsShort: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
             },
-            {
-                clsName: 'months',
-                navFnc: 'FullYear',
-                navStep: 1
+            isLeapYear: function (year) {
+                return (((year % 4 === 0) && (year % 100 !== 0)) || (year % 400 === 0));
             },
-            {
-                clsName: 'years',
-                navFnc: 'FullYear',
-                navStep: 10
-            }],
-        dates:{
-            days: ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
-            daysShort: ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
-            daysMin: ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"],
-            months: ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"],
-            monthsShort: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
-        },
-        isLeapYear: function (year) {
-            return (((year % 4 === 0) && (year % 100 !== 0)) || (year % 400 === 0))
-        },
-        getDaysInMonth: function (year, month) {
-            return [31, (DPGlobal.isLeapYear(year) ? 29 : 28), 31, 30, 31, 30, 31, 31, 30, 31, 30, 31][month]
-        },
-        parseFormat: function(format){
-            var separator = format.match(/[.\/-].*?/),
-                parts = format.split(/\W+/);
-            if (!separator || !parts || parts.length == 0){
-                throw new Error("Invalid date format.");
-            }
-            return {separator: separator, parts: parts};
-        },
-        parseDate: function(date, format) {
-            var parts = date.split(format.separator),
-                date = new Date(1970, 1, 1, 0, 0, 0),
-                val;
-            if (parts.length == format.parts.length) {
-                for (var i=0, cnt = format.parts.length; i < cnt; i++) {
-                    val = parseInt(parts[i], 10)||1;
-                    switch(format.parts[i]) {
+            getSimpleDate: function (year, month, day) {
+                return new Date(year, month, day);
+            },
+            getDaysInMonth: function (year, month) {
+                return [31, (this.isLeapYear(year) ? 29 : 28), 31, 30, 31, 30, 31, 31, 30, 31, 30, 31][month];
+            },
+            parseFormat: function (format) {
+                var separator = format.match(/[.\/\-][\w\W]*?/),
+                    parts = format.split(/\W+/);
+                if (!separator || !parts || parts.length === 0) {
+                    throw new Error("Invalid date format.");
+                }
+                return {separator: separator, parts: parts};
+            },
+            parseDate: function (date, format) {
+                var parts = date.split(format.separator),
+                    val,
+                    i,
+                    cnt;
+                if (parts.length === format.parts.length) {
+                    for (i = 0, cnt = format.parts.length; i < cnt; i += 1) {
+                        val = parseInt(parts[i], 10) || 1;
+                        switch (format.parts[i]) {
                         case 'dd':
                         case 'd':
                             date.setDate(val);
@@ -62,481 +50,430 @@
                         case 'yyyy':
                             date.setFullYear(val);
                             break;
+                        }
                     }
                 }
-            }
-            return date;
+                return date;
+            },
+            formatDate: function (date, format) {
+                var val = {
+                        d: date.getDate(),
+                        m: date.getMonth() + 1,
+                        yy: date.getFullYear().toString().substring(2),
+                        yyyy: date.getFullYear()
+                    },
+                    i,
+                    cnt;
+                val.dd = (val.d < 10 ? '0' : '') + val.d;
+                val.mm = (val.m < 10 ? '0' : '') + val.m;
+                date = [];
+                for (i = 0, cnt = format.parts.length; i < cnt; i += 1) {
+                    date.push(val[format.parts[i]]);
+                }
+                return date.join(format.separator);
+            },
+            headTemplate: '<thead>' +
+                '<tr>' +
+                '<th class="prev"><i class="icon-arrow-left"/></th>' +
+                '<th colspan="2" class="switch month"></th>' +
+                '<th class="next"><i class="icon-arrow-right"/></th>' +
+                '<th class="prev"><i class="icon-arrow-left"/></th>' +
+                '<th colspan="2" class="switch year"></th>' +
+                '<th class="next"><i class="icon-arrow-right"/></th>' +
+                '</tr>' +
+                '</thead>',
+            contTemplate: '<tbody><tr><td colspan="7"></td></tr></tbody>'
         },
-        formatDate: function(date, format){
-            var val = {
-                d: date.getDate(),
-                m: date.getMonth() + 1,
-                yy: date.getFullYear().toString().substring(2),
-                yyyy: date.getFullYear()
-            };
-            val.dd = (val.d < 10 ? '0' : '') + val.d;
-            val.mm = (val.m < 10 ? '0' : '') + val.m;
-            var date = [];
-            for (var i=0, cnt = format.parts.length; i < cnt; i++) {
-                date.push(val[format.parts[i]]);
-            }
-            return date.join(format.separator);
-        },
-        headTemplate: '<thead>'+
-            '<tr>'+
-            '<th class="prev"><i class="icon-arrow-left"/></th>'+
-            '<th colspan="2" class="switch month"></th>'+
-            '<th class="next"><i class="icon-arrow-right"/></th>'+
-            '<th class="prev"><i class="icon-arrow-left"/></th>'+
-            '<th colspan="2" class="switch year"></th>'+
-            '<th class="next"><i class="icon-arrow-right"/></th>'+
-            '</tr>'+
-            '</thead>',
-        contTemplate: '<tbody><tr><td colspan="7"></td></tr></tbody>'
-    };
 
-    // start plugin
-    $.fn.datepicker = function( options ) {
+        // Datepicket object
+        Datepicker = function (element, options) {
+            var self = this,
+                currentDate = new Date();
 
+            self.element = $(element);
+            self.format = DPGlobal.parseFormat(options.format || self.element.data('date-format') || 'mm/dd/yyyy');
 
+            // offset
+            self.offset = self.element.offset();
 
-        // merging settings
-        var settings = $.extend({
-            format: 'mm/dd/yyyy',
-            multidate: false
-        }, options);
+            // set current month and year
+            self.month = currentDate.getMonth();
+            self.year = currentDate.getFullYear();
 
+            // selected dates
+            self.selectedDates = [];
 
-
-        var formatDate = function(date, format){
-            var val = {
-                d: date.getDate(),
-                m: date.getMonth() + 1,
-                yy: date.getFullYear().toString().substring(2),
-                yyyy: date.getFullYear()
-            };
-            val.dd = (val.d < 10 ? '0' : '') + val.d;
-            val.mm = (val.m < 10 ? '0' : '') + val.m;
-            var date = [];
-            for (var i=0, cnt = format.parts.length; i < cnt; i++) {
-                date.push(val[format.parts[i]]);
-            }
-            return date.join(format.separator);
-        };
-
-        return this.each(function() {
-
-            var $this = $(this);
-
-            var format = DPGlobal.parseFormat(settings.format||this.element.data('date-format')||'mm/dd/yyyy');
-
-            $this.parent('.input-append').on({
-                click: function() { $this.focus() }
-            }, '.add-on');
-
-            var offset = $this.offset();
-
-            var $datepickerObj = $('<div class="datepicker-wrap popover bottom" style="top: ' + (offset.top + $this.height() + 10) + 'px; left: ' + offset.left + 'px">').html(
+            self.$datepickerObj = $('<div class="datepicker-wrap popover bottom" style="top: ' +
+                (self.offset.top + self.element.height() + 10) + 'px; left: ' + self.offset.left + 'px">').html(
                 '<div class="arrow" style="left: 10%"></div>' +
-                '<h3 class="popover-title">' +
-                    '<div class="datepicker-select-month">' +
-                        '<a class="datepicker-select-btn prev-month-btn" href="#"><span class="icon-chevron-left"></span></a>' +
-                        '<span class="datepicker-month-year-title datepicker-month">September</span>' +
-                        '<a class="datepicker-select-btn next-month-btn" href="#"><span class="icon-chevron-right"></span></a>' +
-                    '</div>' +
+                    '<h3 class="popover-title">' +
+                        '<div class="datepicker-select-month">' +
+                            '<a class="datepicker-select-btn prev-month-btn" href="#"><span class="icon-chevron-left"></span></a>' +
+                            '<span class="datepicker-month-year-title datepicker-month">September</span>' +
+                            '<a class="datepicker-select-btn next-month-btn" href="#"><span class="icon-chevron-right"></span></a>' +
+                        '</div>' +
 
-                    '<div class="datepicker-select-year">' +
-                        '<a class="datepicker-select-btn prev-year-btn" href="#"><span class="icon-chevron-left"></span></a>' +
-                        '<span class="datepicker-month-year-title datepicker-year">2011</span>' +
-                        '<a class="datepicker-select-btn next-year-btn" href="#"><span class="icon-chevron-right"></span></a>' +
+                        '<div class="datepicker-select-year">' +
+                            '<a class="datepicker-select-btn prev-year-btn" href="#"><span class="icon-chevron-left"></span></a>' +
+                            '<span class="datepicker-month-year-title datepicker-year">2011</span>' +
+                            '<a class="datepicker-select-btn next-year-btn" href="#"><span class="icon-chevron-right"></span></a>' +
+                        '</div>' +
+                        '<div class="clearfix"></div>' +
+                    '</h3>' +
+                    '<div class="popover-content">' +
+                        '<table class="datepicker-calendar">' +
+                            '<thead>' +
+                            '<tr>' +
+                                '<td>Su</td>' +
+                                '<td>Mo</td>' +
+                                '<td>Tu</td>' +
+                                '<td>We</td>' +
+                                '<td>Th</td>' +
+                                '<td>Fr</td>' +
+                                '<td>Sa</td>' +
+                            '</tr>' +
+                            '</thead>' +
+                            '<tbody>' +
+                            '<tr>' +
+                                '<td class="prev-month-date">28</td>' +
+                                '<td class="prev-month-date">29</td>' +
+                                '<td class="prev-month-date">30</td>' +
+                                '<td class="prev-month-date">31</td>' +
+                                '<td class="select-date">1</td>' +
+                                '<td class="select-date">2</td>' +
+                                '<td class="select-date">3</td>' +
+                            '</tr>' +
+                            '<tr>' +
+                                '<td class="select-date">4</td>' +
+                                '<td class="select-date">5</td>' +
+                                '<td class="select-date">6</td>' +
+                                '<td class="select-date">7</td>' +
+                                '<td class="select-date">8</td>' +
+                                '<td class="select-date">9</td>' +
+                                '<td class="select-date">10</td>' +
+                            '</tr>' +
+                            '<tr>' +
+                                '<td class="select-date">11</td>' +
+                                '<td class="select-date">12</td>' +
+                                '<td class="select-date">13</td>' +
+                                '<td class="select-date">14</td>' +
+                                '<td class="select-date">15</td>' +
+                                '<td class="select-date">16</td>' +
+                                '<td class="select-date">17</td>' +
+                            '</tr>' +
+                            '<tr>' +
+                                '<td class="select-date">18</td>' +
+                                '<td class="select-date">19</td>' +
+                                '<td class="select-date">20</td>' +
+                                '<td class="select-date">21</td>' +
+                                '<td class="select-date">22</td>' +
+                                '<td class="select-date">23</td>' +
+                                '<td class="select-date">24</td>' +
+                            '</tr>' +
+                            '<tr>' +
+                                '<td class="select-date">25</td>' +
+                                '<td class="select-date">26</td>' +
+                                '<td class="select-date">27</td>' +
+                                '<td class="select-date">28</td>' +
+                                '<td class="select-date">29</td>' +
+                                '<td class="select-date">30</td>' +
+                                '<td class="next-month-date">1</td>' +
+                            '</tr>' +
+                            '</tbody>' +
+                        '</table>' +
                     '</div>' +
-                    '<div class="clearfix"></div>' +
-                '</h3>' +
-                '<div class="popover-content">' +
-                    '<table class="datepicker-calendar">' +
-                        '<thead>' +
-                        '<tr>' +
-                            '<td>Su</td>' +
-                            '<td>Mo</td>' +
-                            '<td>Tu</td>' +
-                            '<td>We</td>' +
-                            '<td>Th</td>' +
-                            '<td>Fr</td>' +
-                            '<td>Sa</td>' +
-                        '</tr>' +
-                        '</thead>' +
-                        '<tbody>' +
-                        '<tr>' +
-                            '<td class="prev-month-date">28</td>' +
-                            '<td class="prev-month-date">29</td>' +
-                            '<td class="prev-month-date">30</td>' +
-                            '<td class="prev-month-date">31</td>' +
-                            '<td class="select-date">1</td>' +
-                            '<td class="select-date">2</td>' +
-                            '<td class="select-date">3</td>' +
-                        '</tr>' +
-                        '<tr>' +
-                            '<td class="select-date">4</td>' +
-                            '<td class="select-date">5</td>' +
-                            '<td class="select-date">6</td>' +
-                            '<td class="select-date">7</td>' +
-                            '<td class="select-date">8</td>' +
-                            '<td class="select-date">9</td>' +
-                            '<td class="select-date">10</td>' +
-                        '</tr>' +
-                        '<tr>' +
-                            '<td class="select-date">11</td>' +
-                            '<td class="select-date">12</td>' +
-                            '<td class="select-date">13</td>' +
-                            '<td class="select-date">14</td>' +
-                            '<td class="select-date">15</td>' +
-                            '<td class="select-date">16</td>' +
-                            '<td class="select-date">17</td>' +
-                        '</tr>' +
-                        '<tr>' +
-                            '<td class="select-date">18</td>' +
-                            '<td class="select-date">19</td>' +
-                            '<td class="select-date">20</td>' +
-                            '<td class="select-date">21</td>' +
-                            '<td class="select-date">22</td>' +
-                            '<td class="select-date">23</td>' +
-                            '<td class="select-date">24</td>' +
-                        '</tr>' +
-                        '<tr>' +
-                            '<td class="select-date">25</td>' +
-                            '<td class="select-date">26</td>' +
-                            '<td class="select-date">27</td>' +
-                            '<td class="select-date">28</td>' +
-                            '<td class="select-date">29</td>' +
-                            '<td class="select-date">30</td>' +
-                            '<td class="next-month-date">1</td>' +
-                        '</tr>' +
-                        '</tbody>' +
-                    '</table>' +
-                '</div>' +
-            '</div>').appendTo('body');
+                    '</div>'
+            ).appendTo('body');
 
-            $this.focus(function() {
-                $datepickerObj.show();
-            }).blur(function() {
-                $datepickerObj.hide();
+            // fill calendar
+            self.fill();
+
+            self.element.focus(function () {
+                self.$datepickerObj.show();
+            }).blur(function () {
+                self.$datepickerObj.hide();
             });
-            
-            $datepickerObj.bind('click mousedown mouseup', function() {
+
+            self.$datepickerObj.bind('click mousedown mouseup', function () {
                 return false;
             });
 
-            var date = new Date();
+            // set onclick event for .add-on
+            self.element.parent('.input-append').on({
+                click: function () { self.element.focus(); }
+            }, '.add-on');
 
-            var $month = $('.datepicker-month', $datepickerObj);
-            var $year = $('.datepicker-year', $datepickerObj);
+            self.$month = $('.datepicker-month', self.$datepickerObj);
+            self.$year = $('.datepicker-year', self.$datepickerObj);
 
-            var days = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
-            var months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+            self.setMonth(self.month);
+            self.setYear(self.year);
 
-            // set current month
-            var currMonth = date.getMonth();
+            // set many events
+            $('.prev-month-btn', self.$datepickerObj).click($.proxy(self.goPrevMonth, self));
+            $('.next-month-btn', self.$datepickerObj).click($.proxy(self.goNextMonth, self));
 
-            // set current year
-            var currYear = date.getFullYear();
-
-
-            var month = currMonth;
-            var year = currYear;
-
-            var selectedDays = [];
-
-
-            var setDays = function()
-            {
-                var dayCount = (new Date(year, month + 1, 0)).getDate();
-                var firstDayOfWeek = (new Date(year, month, 1)).getDay();
-
-                var dateTbody = '<tr>';
-
-                var generalCount = 0;
-
-                // if first number of month not sunday - then add few number before
-                if (firstDayOfWeek !== 0)
-                {
-                    var qMonth = month;
-                    var qYear = year;
-
-                    if (month == 0)
-                    {
-                        var qMonth = 11;
-                        var qYear = year - 1;
-                    }
-
-                    var prevMonthDate = new Date(qYear, qMonth, 0);
-
-                    var lastNumberPrevMonth = prevMonthDate.getDate();
-                    for (var b = (lastNumberPrevMonth - firstDayOfWeek + 1); b <= lastNumberPrevMonth; b++)
-                    {
-                        var classes = ['prev-month-date'];
-                        var thisDate = new Date(qYear, qMonth -1, b);
-
-                        // if this date is selected - add class "selected"
-                        selectedDays.forEach(function(selectedDate) {
-                            if (selectedDate.getTime() == thisDate.getTime())
-                            {
-                                classes.push('selected');
-                            }
-                        });
-
-                        dateTbody += '<td class="' + classes.join(' ') + '">' + b + '</td>';
-                        generalCount++;
-                    }
-                }
-
-                for (var i = 1; i <= dayCount; i++)
-                {
-                    var classes = ['select-date'];
-                    var thisDate = new Date(year, month, i, 0, 0, 0);
-
-                    // if this date is selected - add class "selected"
-                    selectedDays.forEach(function(selectedDate) {
-                        if (selectedDate.getTime() == thisDate.getTime())
-                        {
-                            classes.push('selected');
-                        }
-                    });
-
-                    dateTbody += '<td class="' + classes.join(' ') + '">' + i + '</td>';
-
-
-                    if (firstDayOfWeek == 6)
-                    {
-                        firstDayOfWeek = 0;
-
-                        dateTbody += '</tr>';
-
-                        if (i != dayCount)
-                        {
-                            dateTbody += '<tr>';
-                        }
-                    }
-                    else
-                    {
-                        firstDayOfWeek++;
-                    }
-                    generalCount++;
-                }
-
-                firstDayOfWeek--;
-
-                if (firstDayOfWeek !== 6)
-                {
-                    var lastDayOfWeek = 6 - firstDayOfWeek;
-
-                    var nextMonth = month + 1;
-                    var nextYear = year;
-
-                    if (month == 11)
-                    {
-                        var nextMonth = 0;
-                        var nextYear = year + 1;
-                    }
-
-                    for (var j = 1; j <= lastDayOfWeek; j++)
-                    {
-                        var classes = ['next-month-date'];
-                        var thisDate = new Date(nextYear, nextMonth, j);
-
-                        // if this date is selected - add class "selected"
-                        selectedDays.forEach(function(selectedDate) {
-                            if (selectedDate.getTime() == thisDate.getTime())
-                            {
-                                classes.push('selected');
-                            }
-                        });
-
-                        dateTbody += '<td class="' + classes.join(' ') + '">' + j + '</td>';
-                        generalCount++;
-                    }
-
-                    dateTbody += '</tr>';
-                }
-
-                if (generalCount <= 35)
-                {
-                    var nextMonth = month + 1;
-                    var nextYear = year;
-
-                    if (month == 11)
-                    {
-                        var nextMonth = 0;
-                        var nextYear = year + 1;
-                    }
-
-                    for (var m = 1; m <= 7; m++, j++)
-                    {
-                        var classes = ['next-month-date'];
-                        var thisDate = new Date(nextYear, nextMonth, j);
-
-                        // if this date is selected - add class "selected"
-                        selectedDays.forEach(function(selectedDate) {
-                            if (selectedDate.getTime() == thisDate.getTime())
-                            {
-                                classes.push('selected');
-                            }
-                        });
-
-                        dateTbody += '<td class="' + classes.join(' ') + '">' + j + '</td>';
-                        generalCount++;
-                    }
-                }
-
-                $('table.datepicker-calendar tbody', $datepickerObj).html(dateTbody);
-            }
-
-            setDays();
-
-            var setMonth = function (newMonth)
-            {
-                month = newMonth;
-                $month.html(months[month]);
-
-            }
-
-            var setYear = function (newYear)
-            {
-                year = newYear;
-                $year.html(year);
-            }
-
-
-            setMonth(currMonth);
-            setYear(currYear);
-
-            function prevMonth()
-            {
-                var newMonth = 11;
-                if (month == 0)
-                {
-                    setYear(year - 1);
-                }
-                else
-                {
-                    newMonth = month - 1;
-                }
-
-                setMonth(newMonth);
-                setDays();
-            }
-
-            function nextMonth()
-            {
-                var newMonth = 0;
-                if (month == 11)
-                {
-                    setYear(year + 1);
-                }
-                else
-                {
-                    newMonth = month + 1;
-                }
-
-                setMonth(newMonth);
-                setDays();
-            }
-
-            $('.prev-month-btn', $datepickerObj).click(prevMonth);
-            $('.next-month-btn', $datepickerObj).click(nextMonth);
-
-            $('.prev-year-btn', $datepickerObj).click(function() {
-                setYear(year - 1);
-                setDays();
+            $('.prev-year-btn', self.$datepickerObj).click(function () {
+                self.setYear(self.year - 1);
+                self.fill();
             });
 
-            $('.next-year-btn', $datepickerObj).click(function() {
-                setYear(year + 1);
-                setDays();
+            $('.next-year-btn', self.$datepickerObj).click(function () {
+                self.setYear(self.year + 1);
+                self.fill();
             });
 
-            $('table.datepicker-calendar tbody', $datepickerObj).on({
-                click: nextMonth
+            $('table.datepicker-calendar tbody', self.$datepickerObj).on({
+                click: $.proxy(self.goNextMonth, self)
             }, '.next-month-date');
 
-            $('table.datepicker-calendar tbody', $datepickerObj).on({
-                click: prevMonth
+            $('table.datepicker-calendar tbody', self.$datepickerObj).on({
+                click: $.proxy(self.goPrevMonth, self)
             }, '.prev-month-date');
 
-            $('table.datepicker-calendar tbody', $datepickerObj).on({
-                click: function(e) {
+            $('table.datepicker-calendar tbody', self.$datepickerObj).on({
+                click: function (e) {
+                    var $day = $(this),
+                        day = $day.html(),
+                        date = DPGlobal.getSimpleDate(self.year, self.month, day),
+                        formattedDates = [];
 
-
-                    var day = $(this).html();
-                    var date = new Date(year, month, day, 0, 0, 0, 0);
-
-                    if (settings.multidate && e.ctrlKey)
-                    {
+                    if (options.multidate && e.ctrlKey) {
                         // if already exist some date in input
-                        if ($this.val())
-                        {
+                        if (self.element.val()) {
                             // if clicked date already selcted
-                            if ($(this).hasClass('selected'))
-                            {
+                            if ($day.hasClass('selected')) {
                                 // remove selection
-                                $(this).removeClass('selected');
+                                $day.removeClass('selected');
 
                                 // remove selected date
-                                selectedDays.forEach(function (oneDate, i) {
-                                    if (oneDate.getTime() == date.getTime())
-                                    {
-                                        delete selectedDays[i];
+                                self.selectedDates.forEach(function (selectedDate, i) {
+                                    if (selectedDate.getTime() === date.getTime()) {
+                                        delete self.selectedDates[i];
                                     }
                                 });
-                            }
-                            else
-                            {
+                            } else {
                                 // added selected date
-                                selectedDays.push(date);
-                                $(this).addClass('selected');
+                                self.selectedDates.push(date);
+                                $day.addClass('selected');
                             }
-                        }
-                        else
-                        {
+                        } else {
                             // added selected date
-                            selectedDays.push(date);
-                            $(this).addClass('selected');
+                            self.selectedDates.push(date);
+                            $day.addClass('selected');
                         }
 
-                    }
-                    else
-                    {
+                    } else {
                         // remove all selected days
                         $('table.datepicker-calendar tbody td').removeClass('selected');
-                        selectedDays = [];
+                        self.selectedDates = [];
 
                         // added selected date
-                        selectedDays.push(date);
-                        $(this).addClass('selected');
+                        self.selectedDates.push(date);
+                        $day.addClass('selected');
 
                         // unfocus
-                        $this.blur();
+                        self.element.blur();
                     }
                     // put all selected dates in input
-                    var formattedDates = [];
-                    selectedDays.forEach(function(selectedDate) {
-                        formattedDates.push(formatDate(selectedDate, format));
+                    self.selectedDates.forEach(function (selectedDate) {
+                        formattedDates.push(DPGlobal.formatDate(selectedDate, self.format));
                     });
-                    $this.val(formattedDates.join(','));
+                    self.element.val(formattedDates.join(options.separator));
                 }
             }, '.select-date');
-        });
+        };
 
-        // returning self
-        return this;
+    Datepicker.prototype = {
+        constructor: Datepicker,
+
+        getDaysInMonth: function (year, month) {
+            return DPGlobal.getSimpleDate(year, month + 1, 0).getDate();
+        },
+
+        getPrevMonth: function () {
+            return (this.month === 0) ? 11 : this.month - 1;
+        },
+
+        getNextMonth: function () {
+            return (this.month === 11) ? 0 : this.month + 1;
+        },
+
+        getPrevYear: function () {
+            return this.year - 1;
+        },
+
+        getNextYear: function () {
+            return this.year + 1;
+        },
+
+        getYearInPrevMonth: function () {
+            return (this.month === 0) ? this.getPrevYear() : this.year;
+        },
+
+        getYearInNextMonth: function () {
+            return (this.month === 11) ? this.getNextYear() : this.year;
+        },
+
+        goPrevMonth: function () {
+            var newMonth = 11;
+            if (this.month === 0) {
+                this.setYear(this.year - 1);
+            } else {
+                newMonth = this.month - 1;
+            }
+
+            //this.setMonth(newMonth);
+            this.month = newMonth;
+            this.$month.html(DPGlobal.dates.months[this.month]);
+            this.fill();
+        },
+
+        goNextMonth: function () {
+            var newMonth = 0;
+            if (this.month === 11) {
+                this.setYear(this.year + 1);
+            } else {
+                newMonth = this.month + 1;
+            }
+
+            //this.setMonth(newMonth);
+            this.month = newMonth;
+            this.$month.html(DPGlobal.dates.months[this.month]);
+            this.fill();
+        },
+
+        setMonth: function (newMonth) {
+            this.month = newMonth;
+            this.$month.html(DPGlobal.dates.months[this.month]);
+        },
+
+        setYear: function (newYear) {
+            this.year = newYear;
+            this.$year.html(this.year);
+        },
+
+        fill: function () {
+            var self = this,
+                daysInMonth = self.getDaysInMonth(self.year, self.month),
+                firstDayOfWeek = DPGlobal.getSimpleDate(self.year, self.month, 1).getDay(),
+                lastDayOfWeek = 6 - firstDayOfWeek,
+                dateTbody = '<tr>',
+                daysMax = 36,
+                daysCount = 0,
+                daysInPrevMonth = (firstDayOfWeek === 0) ? 0 : self.getDaysInMonth(self.getYearInPrevMonth(), self.getPrevMonth()),
+                day,
+                date,
+                i,
+                classes = [],
+                selectDateIfSelected1 = function (selectedDate) {
+                    if (selectedDate.getTime() === date.getTime()) {
+                        classes.push('selected');
+                    }
+                },
+                /**
+                 * if this date is selected - add class "selected"
+                 */
+                 selectDateIfSelected = function (date, firstClass) {
+                    classes = [firstClass];
+                    self.selectedDates.forEach(selectDateIfSelected1);
+                    return classes;
+                };
+
+            // if first number of month not sunday - then add few number before
+            if (daysInPrevMonth > 0) {
+                for (day = (daysInPrevMonth - firstDayOfWeek + 1); day <= daysInPrevMonth; day += 1) {
+
+                    date = DPGlobal.getSimpleDate(self.getYearInPrevMonth(), self.getPrevMonth(), day);
+                    classes = selectDateIfSelected(date, 'prev-month-date');
+
+                    dateTbody += '<td class="' + classes.join(' ') + '">' + day + '</td>';
+                    daysCount += 1;
+                }
+            }
+
+            for (day = 1; day <= daysInMonth; day += 1) {
+                date = DPGlobal.getSimpleDate(self.year, self.month, day);
+                classes = selectDateIfSelected(date, 'select-date');
+
+                dateTbody += '<td class="' + classes.join(' ') + '">' + day + '</td>';
+
+                if (firstDayOfWeek === 6) {
+                    firstDayOfWeek = 0;
+
+                    dateTbody += '</tr>';
+
+                    if (day !== daysInMonth) {
+                        dateTbody += '<tr>';
+                    }
+                } else {
+                    firstDayOfWeek += 1;
+                }
+                daysCount += 1;
+            }
+
+            firstDayOfWeek -= 1;
+
+            if (firstDayOfWeek !== 6) {
+                lastDayOfWeek = 6 - firstDayOfWeek;
+
+                for (day = 1; day <= lastDayOfWeek; day += 1) {
+                    date = DPGlobal.getSimpleDate(self.getYearInNextMonth(), self.getNextMonth(), day);
+                    classes = selectDateIfSelected(date, 'next-month-date');
+
+                    dateTbody += '<td class="' + classes.join(' ') + '">' + day + '</td>';
+                    daysCount += 1;
+                }
+
+                dateTbody += '</tr>';
+            }
+
+            if (daysCount < daysMax) {
+                for (i = 1; i <= 7; i += 1, day += 1) {
+                    date = DPGlobal.getSimpleDate(self.getYearInNextMonth(), self.getNextMonth(), day);
+                    classes = selectDateIfSelected(date, 'next-month-date');
+
+                    dateTbody += '<td class="' + classes.join(' ') + '">' + day + '</td>';
+                    daysCount += 1;
+                }
+            }
+
+            $('table.datepicker-calendar tbody', self.$datepickerObj).html(dateTbody);
+        }
     };
 
+    // start plugin
+
+    $.fn.datepicker = function (options) {
+        return this.each(function () {
+            var $this = $(this),
+                data = $this.data('datepicker'),
+                settings = typeof options === 'object' && options;
+            if (!data) {
+                $this.data('datepicker', (data = new Datepicker(this, $.extend({}, $.fn.datepicker.defaults, settings))));
+            }
+            if (typeof options === 'string') {
+                data[options]();
+            }
+            return this;
+        });
+    };
+
+    $.fn.datepicker.defaults = {
+        format: 'mm/dd/yyyy',
+        multidate: false,
+        separator: ','
+    };
+
+    $.fn.datepicker.Constructor = Datepicker;
+
     $('html').on({
-        mouseenter: function() {
+        mouseenter: function () {
             $('span', this).addClass('icon-white');
         },
-        mouseleave: function() {
+        mouseleave: function () {
             $('span', this).removeClass('icon-white');
         }
     }, '.datepicker-select-btn');
 
-})( jQuery );
+})(jQuery);
